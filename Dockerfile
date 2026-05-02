@@ -12,7 +12,5 @@ COPY . .
 # 预创建数据目录（确保可写）
 RUN mkdir -p /app/data
 
-EXPOSE 5000
-
-# 启动命令（直接用 Flask 自带服务器）
+# 启动命令
 CMD python app.py
