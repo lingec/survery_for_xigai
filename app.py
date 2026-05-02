@@ -15,7 +15,8 @@ import sqlite3
 import os
 from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for, Response, flash
+from flask import Flask, render_template, request, redirect, url_for, Response, flash, session
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -31,6 +32,9 @@ else:
     with open(SECRET_KEY_FILE, "w") as f:
         f.write(key)
     app.secret_key = key
+
+# ── 管理员密码 ──────────────────────────────────────────────
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
 # ── 数据库路径 ──────────────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "survey.db")
@@ -66,6 +70,34 @@ def init_db():
 
 
 init_db()
+
+
+# ── 管理员登录验证装饰器 ────────────────────────────────────
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("admin_logged_in"):
+            return redirect(url_for("admin_login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ── 管理员登录页面 ───────────────────────────────────────────
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if request.method == "POST":
+        if request.form.get("password") == ADMIN_PASSWORD:
+            session["admin_logged_in"] = True
+            return redirect(url_for("admin"))
+        flash("密码错误")
+    return render_template("admin_login.html")
+
+
+# ── 管理员退出 ───────────────────────────────────────────────
+@app.route("/admin/logout")
+def admin_logout():
+    session.pop("admin_logged_in", None)
+    return redirect(url_for("survey"))
 
 
 # ── 首页：问卷 ─────────────────────────────────────────────
@@ -113,6 +145,7 @@ def submit():
 
 # ── 管理员后台：统计看板 ────────────────────────────────────
 @app.route("/admin")
+@admin_required
 def admin():
     conn = get_db()
     rows = conn.execute("SELECT * FROM responses ORDER BY created_at DESC").fetchall()
@@ -161,6 +194,7 @@ def admin():
 
 # ── 导出 CSV ───────────────────────────────────────────────
 @app.route("/export")
+@admin_required
 def export_csv():
     conn = get_db()
     rows = conn.execute("SELECT * FROM responses ORDER BY created_at DESC").fetchall()
@@ -191,6 +225,7 @@ def export_csv():
 
 # ── 清空数据 ───────────────────────────────────────────────
 @app.route("/clear", methods=["POST"])
+@admin_required
 def clear_data():
     conn = get_db()
     conn.execute("DELETE FROM responses")
