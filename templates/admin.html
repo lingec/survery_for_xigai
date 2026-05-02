@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理员后台 - 杭钢公园问卷统计</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f0f4f8;
+    color: #2c3e50;
+    padding: 30px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .header {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    padding: 24px 32px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 { font-size: 20px; color: #1a3a6b; }
+  .header .total { font-size: 14px; color: #7f8c8d; }
+  .header .total strong { font-size: 28px; color: #4a90d9; }
+
+  .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s;
+  }
+  .btn-export { background: #5cb85c; color: #fff; }
+  .btn-export:hover { background: #4a9e4a; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+
+  /* Stats cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    padding: 20px 24px;
+  }
+  .card h2 {
+    font-size: 16px;
+    color: #1a3a6b;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8edf3;
+  }
+  .card h2 .avg { font-size: 13px; color: #7f8c8d; font-weight: 400; margin-left: 8px; }
+
+  .chart-wrap { max-height: 220px; margin: 10px 0; }
+
+  table.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.stats-table th {
+    background: #f7faff;
+    text-align: left;
+    padding: 6px 10px;
+    font-weight: 600;
+    color: #1a3a6b;
+    border-bottom: 2px solid #d0ddea;
+  }
+  table.stats-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #eef2f7;
+  }
+  table.stats-table td.num { text-align: center; }
+  .bar-bg { background: #eef2f7; border-radius: 4px; height: 16px; overflow: hidden; }
+  .bar-fill {
+    height: 100%;
+    background: #4a90d9;
+    border-radius: 4px;
+    transition: width 0.3s;
+    min-width: 2px;
+  }
+
+  .flash-msg {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+    padding: 10px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 14px; }
+    .header { flex-direction: column; align-items: start; }
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="flash-msg">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Header -->
+  <div class="header">
+    <div>
+      <h1>📊 杭钢公园问卷统计后台</h1>
+      <div class="total">共收集 <strong>{{ total }}</strong> 份有效问卷</div>
+    </div>
+    <div class="header-actions">
+      <a href="/export" class="btn btn-export">⬇ 导出 CSV</a>
+      <form action="/clear" method="POST" onsubmit="return confirm('确定清空所有数据？此操作不可恢复！');" style="display:inline;">
+        <button type="submit" class="btn btn-danger">🗑 清空数据</button>
+      </form>
+    </div>
+  </div>
+
+  {% if total == 0 %}
+  <div class="card" style="text-align:center;padding:60px 20px;grid-column:1/-1;">
+    <p style="font-size:16px;color:#7f8c8d;">暂无数据，等待第一份问卷提交……</p>
+  </div>
+  {% else %}
+
+  <div class="stats-grid">
+
+    <!-- Q1 -->
+    <div class="card">
+      <h2>Q1. 您之前是否知道杭钢公园是由原杭州钢铁厂工业遗址改造而成的？</h2>
+      {% set labels_q1 = {'A':'知道且了解改造历程','B':'知道但不了解具体细节','C':'不知道'} %}
+      {% set colors = {'A':'#4a90d9','B':'#f0ad4e','C':'#e74c3c'} %}
+      <div class="chart-wrap">
+        <canvas id="chartQ1"></canvas>
+      </div>
+      <table class="stats-table">
+        <tr><th>选项</th><th>计数</th><th>占比</th><th></th></tr>
+        {% for key in ['A','B','C'] %}
+        {% set cnt = stats.q1.get(key, 0) %}
+        <tr>
+          <td>{{ key }}. {{ labels_q1[key] }}</td>
+          <td class="num">{{ cnt }}</td>
+          <td class="num">{{ (cnt / total * 100) | round(1) }}%</td>
+          <td style="width:40%;"><div class="bar-bg"><div class="bar-fill" style="width:{{ (cnt / total * 100) | round(1) }}%;background:{{ colors[key] }};"></div></div></td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <!-- Q2 -->
+    <div class="card">
+      <h2>Q2. 您来杭钢公园的主要目的是？（多选）</h2>
+      {% set labels_q2 = {'A':'休闲散步/健身','B':'参观工业遗址','C':'拍照打卡/社交','D':'文化展览/活动','E':'其他'} %}
+      <div class="chart-wrap">
+        <canvas id="chartQ2"></canvas>
+      </div>
+      <table class="stats-table">
+        <tr><th>选项</th><th>计数</th><th>占人数</th></tr>
+        {% for key in ['A','B','C','D','E'] %}
+        {% set cnt = stats.q2.get(key, 0) %}
+        <tr>
+          <td>{{ key }}. {{ labels_q2[key] }}</td>
+          <td class="num">{{ cnt }}</td>
+          <td class="num">{{ (cnt / total * 100) | round(1) }}%</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <!-- Q3 Likert -->
+    <div class="card" style="grid-column:1/-1;">
+      <h2>Q3. 您对以下说法的认同程度（均值）</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+        <span style="font-size:13px;background:#f0f6ff;padding:4px 12px;border-radius:4px;">
+          3.1 两山论：<strong>{{ stats.q3_1_avg }}</strong> / 5
+        </span>
+        <span style="font-size:13px;background:#f0f6ff;padding:4px 12px;border-radius:4px;">
+          3.2 以人民为中心：<strong>{{ stats.q3_2_avg }}</strong> / 5
+        </span>
+        <span style="font-size:13px;background:#f0f6ff;padding:4px 12px;border-radius:4px;">
+          3.3 高质量发展：<strong>{{ stats.q3_3_avg }}</strong> / 5
+        </span>
+      </div>
+      <div class="chart-wrap" style="max-height:260px;">
+        <canvas id="chartQ3"></canvas>
+      </div>
+      <table class="stats-table" style="margin-top:8px;">
+        <tr><th>说法</th><th>非常认同(5)</th><th>比较认同(4)</th><th>一般(3)</th><th>不太认同(2)</th><th>非常不认同(1)</th></tr>
+        {% set likert_keys = ['5','4','3','2','1'] %}
+        {% for label, field in [('3.1 两山论','q3_1'),('3.2 以人民为中心','q3_2'),('3.3 高质量发展','q3_3')] %}
+        <tr>
+          <td>{{ label }}</td>
+          {% for k in likert_keys %}
+          <td class="num">{{ stats[field].get(k, 0) }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <!-- Q4 -->
+    <div class="card">
+      <h2>Q4. 体现了新时代中国特色社会主义的哪些理念？（多选）</h2>
+      {% set labels_q4 = {'A':'绿水青山就是金山银山','B':'以人民为中心','C':'高质量发展','D':'文化自信','E':'说不清楚'} %}
+      {% set colors_q4 = {'A':'#27ae60','B':'#2980b9','C':'#8e44ad','D':'#e67e22','E':'#95a5a6'} %}
+      <div class="chart-wrap">
+        <canvas id="chartQ4"></canvas>
+      </div>
+      <table class="stats-table">
+        <tr><th>选项</th><th>计数</th><th>占人数</th></tr>
+        {% for key in ['A','B','C','D','E'] %}
+        {% set cnt = stats.q4.get(key, 0) %}
+        <tr>
+          <td>{{ key }}. {{ labels_q4[key] }}</td>
+          <td class="num">{{ cnt }}</td>
+          <td class="num">{{ (cnt / total * 100) | round(1) }}%</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <!-- Q5 -->
+    <div class="card">
+      <h2>Q5. 杭钢公园建设对提升城市品质和人民幸福感的作用</h2>
+      {% set labels_q5 = {'A':'作用很大','B':'有一定作用','C':'一般','D':'作用不大','E':'没有作用'} %}
+      <div class="chart-wrap">
+        <canvas id="chartQ5"></canvas>
+      </div>
+      <table class="stats-table">
+        <tr><th>选项</th><th>计数</th><th>占比</th></tr>
+        {% for key in ['A','B','C','D','E'] %}
+        {% set cnt = stats.q5.get(key, 0) %}
+        <tr>
+          <td>{{ key }}. {{ labels_q5[key] }}</td>
+          <td class="num">{{ cnt }}</td>
+          <td class="num">{{ (cnt / total * 100) | round(1) }}%</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <!-- Q6 -->
+    <div class="card">
+      <h2>Q6. 工业遗址改造为生态公园的模式是否值得推广？</h2>
+      {% set labels_q6 = {'A':'非常值得','B':'比较值得','C':'一般','D':'不太值得','E':'不值得'} %}
+      <div class="chart-wrap">
+        <canvas id="chartQ6"></canvas>
+      </div>
+      <table class="stats-table">
+        <tr><th>选项</th><th>计数</th><th>占比</th></tr>
+        {% for key in ['A','B','C','D','E'] %}
+        {% set cnt = stats.q6.get(key, 0) %}
+        <tr>
+          <td>{{ key }}. {{ labels_q6[key] }}</td>
+          <td class="num">{{ cnt }}</td>
+          <td class="num">{{ (cnt / total * 100) | round(1) }}%</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+  </div>
+
+  {% endif %}
+
+</div>
+
+<script>
+{% if total > 0 %}
+const COLORS = ['#4a90d9','#f0ad4e','#e74c3c','#27ae60','#8e44ad','#e67e22','#5cb85c','#d35400'];
+const COLORS_ALPHA = COLORS.map(c => c + '80');
+
+// Helper
+function pieChart(id, labels, data, label) {
+  const ctx = document.getElementById(id).getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: label || '计数',
+        data: data,
+        backgroundColor: COLORS_ALPHA.slice(0, labels.length),
+        borderColor: COLORS.slice(0, labels.length),
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+}
+
+// Q1
+pieChart('chartQ1',
+  ['A. 知道且了解', 'B. 知道但不了解', 'C. 不知道'],
+  [{{ stats.q1.get('A', 0) }}, {{ stats.q1.get('B', 0) }}, {{ stats.q1.get('C', 0) }}]
+);
+
+// Q2
+pieChart('chartQ2',
+  ['A. 休闲散步', 'B. 参观遗址', 'C. 拍照打卡', 'D. 文化活动', 'E. 其他'],
+  [{{ stats.q2.get('A', 0) }}, {{ stats.q2.get('B', 0) }}, {{ stats.q2.get('C', 0) }}, {{ stats.q2.get('D', 0) }}, {{ stats.q2.get('E', 0) }}]
+);
+
+// Q3 Likert group
+(function() {
+  const ctx = document.getElementById('chartQ3').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['3.1 两山论', '3.2 以人民为中心', '3.3 高质量发展'],
+      datasets: [
+        { label: '非常认同(5)', data: [{{ stats.q3_1.get('5',0) }}, {{ stats.q3_2.get('5',0) }}, {{ stats.q3_3.get('5',0) }}], backgroundColor: '#27ae60' },
+        { label: '比较认同(4)', data: [{{ stats.q3_1.get('4',0) }}, {{ stats.q3_2.get('4',0) }}, {{ stats.q3_3.get('4',0) }}], backgroundColor: '#4a90d9' },
+        { label: '一般(3)',      data: [{{ stats.q3_1.get('3',0) }}, {{ stats.q3_2.get('3',0) }}, {{ stats.q3_3.get('3',0) }}], backgroundColor: '#f0ad4e' },
+        { label: '不太认同(2)',  data: [{{ stats.q3_1.get('2',0) }}, {{ stats.q3_2.get('2',0) }}, {{ stats.q3_3.get('2',0) }}], backgroundColor: '#e67e22' },
+        { label: '非常不认同(1)', data: [{{ stats.q3_1.get('1',0) }}, {{ stats.q3_2.get('1',0) }}, {{ stats.q3_3.get('1',0) }}], backgroundColor: '#e74c3c' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 } } }
+      }
+    }
+  });
+})();
+
+// Q4
+pieChart('chartQ4',
+  ['A. 两山论', 'B. 以人民为中心', 'C. 高质量发展', 'D. 文化自信', 'E. 说不清楚'],
+  [{{ stats.q4.get('A',0) }}, {{ stats.q4.get('B',0) }}, {{ stats.q4.get('C',0) }}, {{ stats.q4.get('D',0) }}, {{ stats.q4.get('E',0) }}]
+);
+
+// Q5
+pieChart('chartQ5',
+  ['A. 作用很大', 'B. 有一定作用', 'C. 一般', 'D. 作用不大', 'E. 没有作用'],
+  [{{ stats.q5.get('A',0) }}, {{ stats.q5.get('B',0) }}, {{ stats.q5.get('C',0) }}, {{ stats.q5.get('D',0) }}, {{ stats.q5.get('E',0) }}]
+);
+
+// Q6
+pieChart('chartQ6',
+  ['A. 非常值得', 'B. 比较值得', 'C. 一般', 'D. 不太值得', 'E. 不值得'],
+  [{{ stats.q6.get('A',0) }}, {{ stats.q6.get('B',0) }}, {{ stats.q6.get('C',0) }}, {{ stats.q6.get('D',0) }}, {{ stats.q6.get('E',0) }}]
+);
+{% endif %}
+</script>
+
+</body>
+</html>

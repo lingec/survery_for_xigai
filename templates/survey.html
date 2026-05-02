@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>杭钢工业遗址转型公园游客调查问卷</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f0f4f8;
+    color: #2c3e50;
+    line-height: 1.7;
+    padding: 20px;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    padding: 40px 48px;
+  }
+  .header { text-align: center; margin-bottom: 24px; }
+  .logo { max-width: 120px; margin-bottom: 12px; }
+  .uni-name { font-size: 16px; color: #4a90d9; font-weight: 600; letter-spacing: 1px; margin-bottom: 6px; }
+  .survey-title { font-size: 22px; font-weight: 700; color: #1a3a6b; line-height: 1.4; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #7f8c8d; margin-bottom: 20px; }
+  .divider { border: none; border-top: 2px solid #e8edf3; margin: 16px 0; }
+
+  .info-box {
+    background: #f7faff;
+    border-left: 4px solid #4a90d9;
+    padding: 14px 18px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .info-box strong { color: #1a3a6b; }
+  .privacy-box {
+    background: #fffbf0;
+    border-left: 4px solid #ff8c00;
+    padding: 10px 18px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #5a5a5a;
+  }
+
+  .flash-msg {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    color: #856404;
+    padding: 10px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+
+  .question { margin-bottom: 24px; }
+  .q-num {
+    display: inline-block;
+    background: #4a90d9;
+    color: #fff;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 28px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  .q-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a3a6b;
+    margin-bottom: 10px;
+  }
+  .q-title .tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 400;
+    color: #7f8c8d;
+    margin-left: 6px;
+  }
+  .options { padding-left: 6px; }
+  .opt {
+    display: block;
+    padding: 5px 0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .opt input { margin-right: 8px; vertical-align: middle; }
+  .opt-inline {
+    display: inline-block;
+    margin-right: 16px;
+    padding: 5px 0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .likert-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  .likert-table th {
+    background: #f0f6ff;
+    padding: 8px 4px;
+    text-align: center;
+    font-weight: 600;
+    color: #1a3a6b;
+    border-bottom: 2px solid #d0ddea;
+  }
+  .likert-table th:first-child { text-align: left; padding-left: 12px; width: 40%; }
+  .likert-table td { padding: 8px 4px; text-align: center; border-bottom: 1px solid #eef2f7; }
+  .likert-table td:first-child { text-align: left; padding-left: 12px; font-size: 13px; }
+  .likert-table tr:hover { background: #f8faff; }
+  .likert-table input { transform: scale(1.1); }
+
+  .open-q textarea {
+    width: 100%;
+    min-height: 72px;
+    padding: 10px 14px;
+    border: 1px solid #d0ddea;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+  .open-q textarea:focus { outline: none; border-color: #4a90d9; box-shadow: 0 0 0 2px rgba(74,144,217,0.15); }
+
+  /* Submit button */
+  .submit-row { text-align: center; margin-top: 28px; }
+  .btn-submit {
+    background: #4a90d9;
+    color: #fff;
+    border: none;
+    padding: 12px 48px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+  }
+  .btn-submit:hover { background: #357abd; }
+
+  /* Thanks section */
+  .thanks-section {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .thanks-section .thanks-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #5cb85c;
+    margin-bottom: 8px;
+  }
+  .thanks-section .thanks-desc {
+    font-size: 14px;
+    color: #7f8c8d;
+  }
+  .thanks-section:target { display: block; }
+  .thanks-section:target ~ .survey-form { display: none; }
+
+  .footer { text-align: center; margin-top: 28px; padding-top: 20px; border-top: 2px solid #e8edf3; }
+  .footer p { font-size: 14px; color: #7f8c8d; }
+
+  @media (max-width: 600px) {
+    .container { padding: 20px 16px; }
+    .survey-title { font-size: 18px; }
+    .likert-table { font-size: 12px; }
+    .likert-table th, .likert-table td { padding: 6px 2px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <img class="logo" src="/static/logo.png" alt="浙江大学马克思主义学院">
+    <div class="uni-name">浙江大学马克思主义学院</div>
+    <div class="survey-title">杭钢工业遗址转型公园游客调查问卷</div>
+    <div class="subtitle">——"新时代中国特色社会主义在浙江的实践"主题社会实践调研</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="flash-msg">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Thanks section (shown after successful submit) -->
+  {% if request.args.get('submitted') == 'ok' %}
+  <div id="thanks" class="thanks-section" style="display:block;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="18" stroke="#5CB85C" stroke-width="2" fill="#F0FFF0"/>
+      <path d="M16 24l6 6 10-10" stroke="#5CB85C" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="thanks-title">感谢您的参与！</div>
+    <div class="thanks-desc">您的每一份回答都对我们至关重要。<br>—— 浙江大学马克思主义学院社会实践调研团队</div>
+  </div>
+  {% endif %}
+
+  <!-- Survey form -->
+  <div class="survey-form" {% if request.args.get('submitted') == 'ok' %}style="display:none;"{% endif %}>
+    <form action="/submit" method="POST">
+
+      <!-- Survey intro -->
+      <div class="info-box">
+        <strong>调查说明：</strong>您好！我们是浙江大学马克思主义学院的学生，正在开展"<strong>新时代中国特色社会主义在浙江的实践</strong>"主题社会实践调研，旨在了解公众对杭钢工业遗址改造公园模式的看法，为课程研究收集第一手资料。问卷匿名填写，数据仅用于学术研究，感谢您的支持与配合！
+      </div>
+      <div class="privacy-box">
+        <strong>填答说明：</strong>请在合适的选项上打"√"，或在横线上填写文字。预计用时 <strong>2分钟</strong>。<span style="color:#e74c3c;">带 * 题为必答题</span>
+      </div>
+
+      <hr class="divider" style="margin-bottom:20px;">
+
+      <!-- Q1 -->
+      <div class="question">
+        <div class="q-title"><span class="q-num">1</span>您之前是否知道杭钢公园是由原杭州钢铁厂工业遗址改造而成的？<span class="tag">（单选 *）</span></div>
+        <div class="options">
+          <label class="opt"><input type="radio" name="q1" value="A" required> A. 知道且了解改造历程</label>
+          <label class="opt"><input type="radio" name="q1" value="B"> B. 知道但不了解具体细节</label>
+          <label class="opt"><input type="radio" name="q1" value="C"> C. 不知道</label>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="question">
+        <div class="q-title"><span class="q-num">2</span>您来杭钢公园的主要目的是？<span class="tag">（可多选）</span></div>
+        <div class="options">
+          <label class="opt"><input type="checkbox" name="q2" value="A"> A. 休闲散步 / 健身锻炼</label>
+          <label class="opt"><input type="checkbox" name="q2" value="B"> B. 参观工业遗址 / 了解工业历史</label>
+          <label class="opt"><input type="checkbox" name="q2" value="C"> C. 拍照打卡 / 社交分享</label>
+          <label class="opt"><input type="checkbox" name="q2" value="D"> D. 参加文化展览或活动</label>
+          <label class="opt"><input type="checkbox" name="q2" value="E"> E. 其他（请注明）<input type="text" style="width:140px;border:none;border-bottom:1px solid #aaa;padding:2px 6px;font-size:14px;margin-left:4px;" placeholder="__________"></label>
+        </div>
+      </div>
+
+      <!-- Q3 Likert -->
+      <div class="question">
+        <div class="q-title"><span class="q-num">3</span>杭钢从"工业锈带"转变为"生活秀带"，您对以下说法的认同程度如何？<span class="tag">（每行单选）</span></div>
+        <table class="likert-table">
+          <thead>
+            <tr>
+              <th style="width:36%;text-align:left;padding-left:12px;">说法</th>
+              <th>非常认同</th>
+              <th>比较认同</th>
+              <th>一般</th>
+              <th>不太认同</th>
+              <th>非常不认同</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>3.1 这是浙江践行<strong>"绿水青山就是金山银山"</strong>理念的生动实践</td>
+              <td><input type="radio" name="q3_1" value="5"></td>
+              <td><input type="radio" name="q3_1" value="4"></td>
+              <td><input type="radio" name="q3_1" value="3"></td>
+              <td><input type="radio" name="q3_1" value="2"></td>
+              <td><input type="radio" name="q3_1" value="1"></td>
+            </tr>
+            <tr>
+              <td>3.2 改造既保留城市工业记忆又改善生态环境，体现了<strong>"以人民为中心"</strong>的发展思想</td>
+              <td><input type="radio" name="q3_2" value="5"></td>
+              <td><input type="radio" name="q3_2" value="4"></td>
+              <td><input type="radio" name="q3_2" value="3"></td>
+              <td><input type="radio" name="q3_2" value="2"></td>
+              <td><input type="radio" name="q3_2" value="1"></td>
+            </tr>
+            <tr>
+              <td>3.3 这是推动<strong>高质量发展</strong>和产业转型升级的成功范例</td>
+              <td><input type="radio" name="q3_3" value="5"></td>
+              <td><input type="radio" name="q3_3" value="4"></td>
+              <td><input type="radio" name="q3_3" value="3"></td>
+              <td><input type="radio" name="q3_3" value="2"></td>
+              <td><input type="radio" name="q3_3" value="1"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Q4 -->
+      <div class="question">
+        <div class="q-title"><span class="q-num">4</span>您认为杭钢公园的改造建设主要体现了新时代中国特色社会主义的哪些理念？<span class="tag">（可多选）</span></div>
+        <div class="options">
+          <label class="opt"><input type="checkbox" name="q4" value="A"> A. <strong>绿水青山就是金山银山</strong>（生态文明建设）</label>
+          <label class="opt"><input type="checkbox" name="q4" value="B"> B. <strong>以人民为中心</strong>的发展思想</label>
+          <label class="opt"><input type="checkbox" name="q4" value="C"> C. 推动<strong>高质量发展</strong>与产业转型升级</label>
+          <label class="opt"><input type="checkbox" name="q4" value="D"> D. <strong>文化自信</strong>与工业遗产保护传承</label>
+          <label class="opt"><input type="checkbox" name="q4" value="E"> E. 说不清楚</label>
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="question">
+        <div class="q-title"><span class="q-num">5</span>您认为杭钢公园的建设对提升城市品质和人民幸福感的作用如何？<span class="tag">（单选 *）</span></div>
+        <div class="options">
+          <label class="opt-inline"><input type="radio" name="q5" value="A" required> A. 作用很大</label>
+          <label class="opt-inline"><input type="radio" name="q5" value="B"> B. 有一定作用</label>
+          <label class="opt-inline"><input type="radio" name="q5" value="C"> C. 一般</label>
+          <label class="opt-inline"><input type="radio" name="q5" value="D"> D. 作用不大</label>
+          <label class="opt-inline"><input type="radio" name="q5" value="E"> E. 没有作用</label>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="question">
+        <div class="q-title"><span class="q-num">6</span>您认为将工业遗址改造为生态公园的模式是否值得在浙江乃至全国推广？<span class="tag">（单选 *）</span></div>
+        <div class="options">
+          <label class="opt-inline"><input type="radio" name="q6" value="A" required> A. 非常值得</label>
+          <label class="opt-inline"><input type="radio" name="q6" value="B"> B. 比较值得</label>
+          <label class="opt-inline"><input type="radio" name="q6" value="C"> C. 一般</label>
+          <label class="opt-inline"><input type="radio" name="q6" value="D"> D. 不太值得</label>
+          <label class="opt-inline"><input type="radio" name="q6" value="E"> E. 不值得</label>
+        </div>
+      </div>
+
+      <!-- Q7 Open -->
+      <div class="question open-q">
+        <div class="q-title"><span class="q-num">7</span>您对杭钢公园的进一步提升或浙江省工业遗址保护与利用有什么建议？</div>
+        <textarea name="q7" placeholder="请在此处填写您的宝贵意见……"></textarea>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-row">
+        <button type="submit" class="btn-submit">✓ 提交问卷</button>
+      </div>
+
+    </form>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>—— 浙江大学马克思主义学院社会实践调研团队</p>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
