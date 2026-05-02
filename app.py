@@ -181,9 +181,10 @@ def export_csv():
             r["q4"], r["q5"], r["q6"], r["q7"]
         ])
 
+    content = output.getvalue().encode("utf-8-sig")
     return Response(
-        output.getvalue(),
-        mimetype="text/csv; charset=utf-8-sig",
+        content,
+        mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=survey_results.csv"}
     )
 
